@@ -64,30 +64,25 @@
                 var data = parseRankadeData(resp);
                 if (data && data.length) {
                     data.forEach(function(u, i) {
-                        //if(u.status !== 'inactive'){
-                           // console.log(u.name);
-                           // var url = 'https://mcec-foos.azurewebsites.net/api/view_me?alias=' + u.alias;
-                           // var score = '<a href="' + url + '" target="_blank">'+ u.score + '</a>';
-                            $('#leaderboardTbBdy').append('<tr><th scope="row"><input class="dypCheckbox" type="checkbox" value=\''+JSON.stringify({"name": u.name, "score": u.score})+'\' name="dyp[]"></th><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
-                        //}
-                        
+                        $('#leaderboardTbBdy').append('<tr><th scope="row"><input class="dypCheckbox" type="checkbox" value=\''+JSON.stringify({"name": u.name, "score": u.score})+'\' name="dyp[]"></th><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
                     });
                 }
             });
         }
         function match(lowerPlayers, upperPlayers){
-          if(lowerPlayers.length <=0 || lowerPlayers.length <=0){
+          if(lowerPlayers.length <=0 || upperPlayers.length <=0){
             return [];
           }
 
           var lowestPlayer = lowerPlayers.pop();
       
-          var scalledPlayers = upperPlayers.map(function(p){
-              p.score -= lowestPlayer.score;
-              return p;
+          var scaledPlayers = upperPlayers.map(function(p){
+              var clone = _.cloneDeep(p);
+              clone.score -= lowestPlayer.score;
+              return clone;
           });
 
-          var totalScore = scalledPlayers.reduce(function(a, b){
+          var totalScore = scaledPlayers.reduce(function(a, b){
               return a + b.score;
           }, 0);
 
@@ -95,10 +90,10 @@
           var matchedPlayer;
           var runningTotal = 0.0;
 
-          for(var i=0; i< scalledPlayers.length; i++){
-            runningTotal += (scalledPlayers[i].score / totalScore);
+          for(var i=0; i< scaledPlayers.length; i++){
+            runningTotal += (scaledPlayers[i].score / totalScore);
             if(runningTotal > random){
-              matchedPlayer = scalledPlayers[i];
+              matchedPlayer = scaledPlayers[i];
               break;
             }
           }
@@ -141,7 +136,6 @@
           });
 
           var teams = matchUpAlgorithm(players);
-          console.log(teams);
 
           $("#dypTeamsTbBdy").html("");
             if (teams && teams.length) {
