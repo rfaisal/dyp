@@ -68,7 +68,7 @@
                             console.log(u.name);
                            // var url = 'https://mcec-foos.azurewebsites.net/api/view_me?alias=' + u.alias;
                            // var score = '<a href="' + url + '" target="_blank">'+ u.score + '</a>';
-                            $('#leaderboardTbBdy').append('<tr><th scope="row">'+ (i+1)+'</th><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
+                            $('#leaderboardTbBdy').append('<tr><th scope="row"><input type="checkbox" value="'+{"name": u.name, "score": u.score}+'" name="dyp[]"></th><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
                         //}
                         
                     });
