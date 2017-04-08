@@ -1,1 +1,53 @@
-<h1>Hello</h1>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.rawgit.com/lodash/lodash/4.5.1/dist/lodash.min.js"></script>
+    <script src="https://code.jquery.com/jquery.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+    
+    <script>
+       
+        function refreshLeaderBoard() {
+            $("#leaderboardTbBdy").html("");
+
+            $.get("https://mcec-foos.azurewebsites.net/api/leaderboard", function(data, status) {
+                if (data && data.length) {
+                    data.forEach(function(u, i) {
+                        if(u.status !== 'inactive'){
+                            console.log(u.name);
+                            var url = 'https://mcec-foos.azurewebsites.net/api/view_me?alias=' + u.alias;
+                            var score = '<a href="' + url + '" target="_blank">'+ u.score.toFixed(2) + '</a>';
+                            $('#leaderboardTbBdy').append('<tr><th scope="row">'+ (i+1)+'</th><td>'+ u.alias +'</td><td>'+ u.name +'</td><td>'+score+'</td></tr>');
+                        }
+                        
+                    });
+                }
+            });
+        }
+        $(document).ready(function() {
+            refreshLeaderBoard();
+        });
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Leaderboard</title>
+</head>
+
+<body>
+    <table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Alias</th>
+      <th>Name</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody id='leaderboardTbBdy'>
+  </tbody>
+</table>
+</body>
+
+</html>
