@@ -37,13 +37,13 @@
               .map(function(r){
                 return r.map(function(r1){
                   if(r1.class.indexOf("playerCol") !== -1){
-                    return {"name" : r1.span && r1.span.content ? r1.span.content : ""};
+                    return {"name" : r1.span && r1.span.content ? r1.span.content.trim().replace("*", "") : ""};
                   }
 
                   if(r1.class.indexOf("reeCol") !== -1){
                     var sp = _.isArray(r1.span) ?
                         r1.span.filter(function(f){return f.title.indexOf("Ree score") !== -1;}) : [r1.span];
-                    return {"score" : sp.length > 0 && sp[0].content ? sp[0].content : 0};
+                    return {"score" : sp.length > 0 && sp[0].content ? Number(sp[0].content) : 0};
                   }
                 });
               })
@@ -65,18 +65,94 @@
                 if (data && data.length) {
                     data.forEach(function(u, i) {
                         //if(u.status !== 'inactive'){
-                            console.log(u.name);
+                           // console.log(u.name);
                            // var url = 'https://mcec-foos.azurewebsites.net/api/view_me?alias=' + u.alias;
                            // var score = '<a href="' + url + '" target="_blank">'+ u.score + '</a>';
-                            $('#leaderboardTbBdy').append('<tr><th scope="row"><input type="checkbox" value="'+{"name": u.name, "score": u.score}+'" name="dyp[]"></th><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
+                            $('#leaderboardTbBdy').append('<tr><th scope="row"><input class="dypCheckbox" type="checkbox" value=\''+JSON.stringify({"name": u.name, "score": u.score})+'\' name="dyp[]"></th><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
                         //}
                         
                     });
                 }
             });
         }
+        function match(lowerPlayers, upperPlayers){
+          if(lowerPlayers.length <=0 || lowerPlayers.length <=0){
+            return [];
+          }
+
+          var lowestPlayer = lowerPlayers.pop();
+      
+          var scalledPlayers = upperPlayers.map(function(p){
+              p.score -= lowestPlayer.score;
+              return p;
+          });
+
+          var totalScore = scalledPlayers.reduce(function(a, b){
+              return a + b.score;
+          }, 0);
+
+          var random = Math.random();
+          var matchedPlayer;
+          var runningTotal = 0.0;
+
+          for(var i=0; i< scalledPlayers.length; i++){
+            runningTotal += (scalledPlayers[i].score / totalScore);
+            if(runningTotal > random){
+              matchedPlayer = scalledPlayers[i];
+              break;
+            }
+          }
+
+          matchedPlayer.score += lowestPlayer.score;
+
+          upperPlayers = _.filter(upperPlayers, function(p){
+              return p.name !== matchedPlayer.name;
+          });
+
+          return [{"player1" : matchedPlayer, "player2" : lowestPlayer}].concat(match(lowerPlayers, upperPlayers));
+
+        }
+        function matchUpAlgorithm(players) {
+            if(!players || players.length <=0){
+              return [];
+            }
+
+            players = players.sort(function (a, b) {
+              return b.score - a.score;
+            });
+
+            var mid = Math.ceil(players.length / 2);
+            var upper = players.slice(0, mid);
+            var lower = players.slice(mid);
+
+            if(lower.length < upper.length){
+              var dup = _.cloneDeep(_.sample(lower));
+              dup.score = lower[lower.length -1].score - 1;
+              lower.push(dup);
+            }
+
+            return match(lower, upper);
+        }
+
+        function generateDypTeams(){
+          var players = [];
+          $('.dypCheckbox:checked').each(function() {
+            players.push(JSON.parse($(this).val()));
+          });
+
+          var teams = matchUpAlgorithm(players);
+          console.log(teams);
+
+          $("#dypTeamsTbBdy").html("");
+            if (teams && teams.length) {
+                teams.forEach(function(u, i) {
+                    $('#dypTeamsTbBdy').append('<tr><th scope="row">'+ (i+1)+'</th><td>'+ u.player1.name +'</td><td>'+u.player2.name+'</td></tr>');
+                });
+            }
+        }
         $(document).ready(function() {
             refreshLeaderBoard();
+            $("#dypBtn").click(generateDypTeams);
         });
     </script>
     <meta charset="utf-8">
@@ -85,15 +161,27 @@
 </head>
 
 <body>
-    <table class="table table-bordered table-striped">
+<table class="table table-bordered table-striped">
   <thead>
     <tr>
-      <th>#</th>
+      <th>DYP</th>
       <th>Name</th>
       <th>Score</th>
     </tr>
   </thead>
   <tbody id='leaderboardTbBdy'>
+  </tbody>
+</table>
+<input type="button" id="dypBtn" value="Generate DYP teams"/>
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Player1</th>
+      <th>Player2</th>
+    </tr>
+  </thead>
+  <tbody id='dypTeamsTbBdy'>
   </tbody>
 </table>
 </body>
