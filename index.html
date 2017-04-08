@@ -8,19 +8,68 @@
     <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
     
     <script>
-       
+        function parseRankadeData(resp){
+         resp = _.mapValues(resp,function(query){
+                  if(query && query.results && query.results.div && query.results.div.class == "group-page-rankings"){
+                    return query.results.div.div;
+                  }
+                  return [];
+              });
+
+            if(resp && _.isArray(resp.query)){
+              resp = resp.query;
+            }
+            else{
+              resp = [];
+            }
+            resp = resp
+              .map(function(r){
+                return r.div;
+              })
+              .filter(function(r){
+                  return _.isArray(r);
+              })
+              .map(function(r){
+                return r.filter(function(r1){
+                  return r1.class && (r1.class.indexOf("playerCol") !== -1 || r1.class.indexOf("reeCol") !== -1)
+                })
+              })
+              .map(function(r){
+                return r.map(function(r1){
+                  if(r1.class.indexOf("playerCol") !== -1){
+                    return {"name" : r1.span && r1.span.content ? r1.span.content : ""};
+                  }
+
+                  if(r1.class.indexOf("reeCol") !== -1){
+                    var sp = _.isArray(r1.span) ?
+                        r1.span.filter(function(f){return f.title.indexOf("Ree score") !== -1;}) : [r1.span];
+                    return {"score" : sp.length > 0 && sp[0].content ? sp[0].content : 0};
+                  }
+                });
+              })
+              .filter(_.isArray)
+              .map(function(r){
+                  return r.reduce(function(a, b){
+                    return _.assign(a, b);
+                  },{});
+              });   
+            
+            return resp;
+        }
         function refreshLeaderBoard() {
             $("#leaderboardTbBdy").html("");
 
-            $.get("https://mcec-foos.azurewebsites.net/api/leaderboard", function(data, status) {
+            $.get("https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url%3D'https%3A%2F%2Frankade.com%2Fmicrosoft-vancouver%2F'%20and%20xpath%3D'%2F%2Fdiv%5Bcontains(%40class%2C%20%22group-page-rankings%22)%5D'&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys", 
+              function(resp, status) {
+                var data = parseRankadeData(resp);
                 if (data && data.length) {
                     data.forEach(function(u, i) {
-                        if(u.status !== 'inactive'){
+                        //if(u.status !== 'inactive'){
                             console.log(u.name);
-                            var url = 'https://mcec-foos.azurewebsites.net/api/view_me?alias=' + u.alias;
-                            var score = '<a href="' + url + '" target="_blank">'+ u.score.toFixed(2) + '</a>';
-                            $('#leaderboardTbBdy').append('<tr><th scope="row">'+ (i+1)+'</th><td>'+ u.alias +'</td><td>'+ u.name +'</td><td>'+score+'</td></tr>');
-                        }
+                           // var url = 'https://mcec-foos.azurewebsites.net/api/view_me?alias=' + u.alias;
+                           // var score = '<a href="' + url + '" target="_blank">'+ u.score + '</a>';
+                            $('#leaderboardTbBdy').append('<tr><th scope="row">'+ (i+1)+'</th><td>'+ u.alias +'</td><td>'+ u.name +'</td><td>'+u.score+'</td></tr>');
+                        //}
                         
                     });
                 }
