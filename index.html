@@ -72,13 +72,15 @@
         function match(lowerPlayers, upperPlayers){
           if(lowerPlayers.length <=0 || upperPlayers.length <=0){
             return [];
-          }
+          }else if(lowerPlayers.length == 1 && upperPlayers.length == 1){
+            return [{"player1" : upperPlayers[0], "player2" : lowerPlayers[0]}];   
+          } 
 
           var lowestPlayer = lowerPlayers.pop();
       
           var scaledPlayers = upperPlayers.map(function(p){
               var clone = _.cloneDeep(p);
-              clone.score -= lowestPlayer.score;
+              clone.score -= lowerPlayers[lowerPlayers.length-1].score;
               return clone;
           });
 
