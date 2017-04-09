@@ -100,7 +100,7 @@
             }
           }
 
-          matchedPlayer.score += lowestPlayer.score;
+          matchedPlayer.score += lowerPlayers[lowerPlayers.length-1].score;
 
           upperPlayers = _.filter(upperPlayers, function(p){
               return p.name !== matchedPlayer.name;
